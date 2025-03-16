@@ -23,8 +23,7 @@ COPY package*.json ./
 RUN npm ci
 
 COPY --chown=node:node . .
-RUN npx prisma generate \
-    && npm run build \
+RUN npm run build \
     && npm prune --omit=dev
 
 # ---
@@ -36,8 +35,12 @@ ENV NODE_ENV production
 USER node
 WORKDIR /home/node
 
+# Установка ffmpeg
+RUN apk add --no-cache ffmpeg
+
 COPY --from=builder --chown=node:node /home/node/package*.json ./
 COPY --from=builder --chown=node:node /home/node/node_modules/ ./node_modules/
 COPY --from=builder --chown=node:node /home/node/dist/ ./dist/
 
-CMD ["node", "dist/main.js"]
+# Используем команду из package.json для запуска в production
+CMD ["npm", "run", "start:prod"]
